@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur de Prêt - Banques du Sénégal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #008E49;
+            --secondary: #FDEF42;
+            --accent: #E10019;
+            --dark: #0A1F1C;
+            --darker: #051412;
+            --light: #F0F7F5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Navigation Responsive */
+        .navbar {
+            background: rgba(10, 31, 28, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--primary);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .nav-item a {
+            color: var(--light);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .nav-item a:hover, .nav-item a.active {
+            background: var(--primary);
+            color: var(--dark);
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 4px;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--primary);
+            transition: all 0.3s;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+        
+        /* Sections */
+        .section {
+            display: none;
+            padding: 20px 0;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .main-content {
+            margin-top: 90px;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0, 142, 73, 0.1), rgba(253, 239, 66, 0.1));
+            border-radius: 15px;
+            border: 1px solid var(--primary);
+        }
+        
+        .header-section h1 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .header-section p {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.9;
+        }
+        
+        /* Simulation Grid Responsive */
+        .simulation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 968px) {
+            .simulation-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+        
+        .input-section, .results-section {
+            background: rgba(10, 31, 28, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .input-section, .results-section {
+                padding: 20px 15px;
+            }
+        }
+        
+        .section-title {
+            font-size: clamp(1.3rem, 3vw, 1.5rem);
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--secondary);
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: var(--light);
+            font-size: 16px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 10px rgba(253, 239, 66, 0.3);
+        }
+        
+        .duration-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .duration-option {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            flex: 1;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+        }
+        
+        .duration-option.active {
+            background: var(--primary);
+            color: var(--dark);
+            font-weight: bold;
+        }
+        
+        .slider-container {
+            margin-top: 10px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid var(--dark);
+        }
+        
+        .value-display {
+            text-align: right;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 5px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        /* Bank Selector Responsive */
+        .bank-selector {
+            margin: 20px 0;
+        }
+        
+        .bank-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 480px) {
+            .bank-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .bank-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+        }
+        
+        .bank-option:hover, .bank-option.active {
+            background: var(--primary);
+            color: var(--dark);
+            transform: translateY(-2px);
+        }
+        
+        /* Results Grid Responsive */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        @media (max-width: 480px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        .result-card {
+            background: rgba(0, 142, 73, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .result-value {
+            font-size: clamp(1.3rem, 3vw, 1.8rem);
+            font-weight: bold;
+            color: var(--secondary);
+            margin: 8px 0;
+        }
+        
+        .result-label {
+            color: var(--light);
+            opacity: 0.8;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+        }
+        
+        /* Chart Container Responsive */
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 25px 0;
+            height: 250px;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 200px;
+                padding: 10px;
+            }
+        }
+        
+        /* Buttons Responsive */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 25px;
+        }
+        
+        @media (max-width: 480px) {
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 50px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--dark);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Tableau d'amortissement responsive */
+        .table-container {
+            max-height: 400px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+        }
+        
+        .amortization-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        
+        .amortization-table th,
+        .amortization-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+        }
+        
+        .amortization-table th {
+            background: var(--primary);
+            color: var(--dark);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        /* Section Comparaison */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 480px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .comparison-card {
+            background: rgba(10, 31, 28, 0.8);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Section Historique */
+        .history-list {
+            margin-top: 30px;
+        }
+        
+        .history-item {
+            background: rgba(10, 31, 28, 0.8);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .history-item {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        
+        /* Section Contact */
+        .contact-form {
+            display: grid;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        /* Assistant IA Responsive */
+        .assistant-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        @media (max-width: 768px) {
+            .assistant-container {
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+        
+        .assistant-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: var(--dark);
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 480px) {
+            .assistant-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+        
+        .assistant-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .assistant-chat {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: min(350px, 90vw);
+            height: min(400px, 60vh);
+            background: rgba(10, 31, 28, 0.95);
+            border: 1px solid var(--primary);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+        
+        @media (max-width: 480px) {
+            .assistant-chat {
+                width: 95vw;
+                right: -10px;
+            }
+        }
+        
+        .assistant-chat.active {
+            display: flex;
+        }
+        
+        .chat-header {
+            padding: 15px;
+            background: var(--primary);
+            color: var(--dark);
+            border-radius: 15px 15px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 85%;
+            word-wrap: break-word;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .message.bot {
+            background: rgba(0, 142, 73, 0.2);
+            align-self: flex-start;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .message.user {
+            background: rgba(253, 239, 66, 0.2);
+            align-self: flex-end;
+            border-right: 3px solid var(--secondary);
+        }
+        
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid var(--primary);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--primary);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .chat-input button {
+            padding: 10px 15px;
+            background: var(--primary);
+            border: none;
+            border-radius: 5px;
+            color: var(--dark);
+            cursor: pointer;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background: var(--primary);
+            color: var(--dark);
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Navigation mobile */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+            
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background: rgba(10, 31, 28, 0.98);
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                padding-top: 50px;
+                gap: 0;
+                transition: left 0.3s;
+            }
+            
+            .nav-menu.active {
+                left: 0;
+            }
+            
+            .nav-item {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .nav-item a {
+                display: block;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+        
+        /* Améliorations pour très petits écrans */
+        @media (max-width: 360px) {
+            .main-content {
+                padding: 10px;
+                margin-top: 70px;
+            }
+            
+            .header-section {
+                padding: 20px 15px;
+                margin-bottom: 20px;
+            }
+            
+            .input-section, .results-section {
+                padding: 15px 10px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                min-height: 45px;
+            }
+        }
+        
+        /* Orientation paysage sur mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .main-content {
+                margin-top: 60px;
+            }
+            
+            .header-section {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .simulation-grid {
+                gap: 15px;
+            }
+            
+            .chart-container {
+                height: 150px;
+            }
+            
+            .assistant-chat {
+                height: 70vh;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span>🏦</span>
+                <span>Finance Sénégal</span>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item"><a href="#simulation" class="nav-link active">Simulation</a></li>
+                <li class="nav-item"><a href="#comparaison" class="nav-link">Comparaison</a></li>
+                <li class="nav-item"><a href="#historique" class="nav-link">Historique</a></li>
+                <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Assistant IA -->
+    <div class="assistant-container">
+        <div class="assistant-chat" id="assistantChat">
+            <div class="chat-header">
+                <span>🤖 Assistant IA</span>
+                <button onclick="toggleAssistant()">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    Bonjour ! Je suis votre assistant IA pour les prêts bancaires. Comment puis-je vous aider ?
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Posez votre question...">
+                <button onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+        <button class="assistant-btn" onclick="toggleAssistant()">🤖</button>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- Section Simulation -->
+            <section id="simulation" class="section active">
+                <div class="header-section">
+                    <h1>Simulateur de Prêt Bancaire Sénégalais</h1>
+                    <p>Calculez vos mensualités et planifiez votre projet avec les banques locales</p>
+                </div>
+
+                <div class="simulation-grid">
+                    <!-- Input Section -->
+                    <div class="input-section">
+                        <h2 class="section-title">📊 Paramètres du Prêt</h2>
+                        
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label class="input-label">Montant du prêt (FCFA)</label>
+                                <input type="number" class="input-field" id="loanAmount" value="5000000" min="100000" step="100000">
+                                <div class="slider-container">
+                                    <input type="range" class="slider" id="loanAmountSlider" min="100000" max="50000000" value="5000000" step="100000">
+                                </div>
+                                <div class="value-display" id="loanAmountDisplay">5 000 000 FCFA</div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label class="input-label">Durée du prêt</label>
+                                <div class="duration-selector">
+                                    <div class="duration-option active" data-unit="years">Années</div>
+                                    <div class="duration-option" data-unit="months">Mois</div>
+                                </div>
+                                <input type="number" class="input-field" id="loanTerm" value="10" min="1" max="360">
+                                <div class="slider-container">
+                                    <input type="range" class="slider" id="loanTermSlider" min="1" max="30" value="10">
+                                </div>
+                                <div class="value-display" id="loanTermDisplay">10 ans</div>
+                            </div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label class="input-label">Taux d'intérêt (%)</label>
+                                <input type="number" class="input-field" id="interestRate" value="6.5" min="1" max="20" step="0.1">
+                                <div class="slider-container">
+                                    <input type="range" class="slider" id="interestRateSlider" min="1" max="20" value="6.5" step="0.1">
+                                </div>
+                                <div class="value-display" id="interestRateDisplay">6.5%</div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label class="input-label">Apport personnel (FCFA)</label>
+                                <input type="number" class="input-field" id="downPayment" value="1000000" min="0" step="100000">
+                            </div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label class="input-label">Revenu mensuel (FCFA)</label>
+                                <input type="number" class="input-field" id="monthlyIncome" value="500000" min="100000" step="50000">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label class="input-label">Type de prêt</label>
+                                <select class="input-field" id="loanType">
+                                    <option value="immobilier">Immobilier</option>
+                                    <option value="automobile">Automobile</option>
+                                    <option value="personnel">Personnel</option>
+                                    <option value="professionnel">Professionnel</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Bank Selector -->
+                        <div class="bank-selector">
+                            <h3 class="section-title">🏦 Choisissez votre banque</h3>
+                            <div class="bank-options">
+                                <div class="bank-option active" data-bank="boa">Bank of Africa</div>
+                                <div class="bank-option" data-bank="bisco">Banque Islamique</div>
+                                <div class="bank-option" data-bank="sgbs">Société Générale</div>
+                                <div class="bank-option" data-bank="ecobank">Ecobank</div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" id="calculateBtn">
+                                <span>🧮</span> Calculer la simulation
+                            </button>
+                            <button class="btn btn-secondary" id="resetBtn">
+                                <span>🔄</span> Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="results-section">
+                        <h2 class="section-title">📈 Résultats de Simulation</h2>
+                        
+                        <div class="results-grid">
+                            <div class="result-card">
+                                <div class="result-label">Mensualité</div>
+                                <div class="result-value" id="monthlyPayment">56 790 FCFA</div>
+                                <div class="result-label">par mois</div>
+                            </div>
+                            
+                            <div class="result-card">
+                                <div class="result-label">Coût total</div>
+                                <div class="result-value" id="totalCost">1 814 800 FCFA</div>
+                                <div class="result-label">intérêts inclus</div>
+                            </div>
+                            
+                            <div class="result-card">
+                                <div class="result-label">Taux d'endettement</div>
+                                <div class="result-value" id="debtRatio">11.4%</div>
+                                <div class="result-label">sur revenus</div>
+                            </div>
+                            
+                            <div class="result-card">
+                                <div class="result-label">Durée</div>
+                                <div class="result-value" id="amortizationPeriod">10 ans</div>
+                                <div class="result-label">de remboursement</div>
+                            </div>
+                        </div>
+
+                        <!-- Graphique -->
+                        <h3 class="section-title">📊 Répartition des Paiements</h3>
+                        <div class="chart-container">
+                            <canvas id="loanChart"></canvas>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" id="exportBtn">
+                                <span>💾</span> Exporter le rapport
+                            </button>
+                            <button class="btn btn-secondary" id="detailBtn">
+                                <span>📋</span> Voir le détail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tableau d'amortissement -->
+                <div class="input-section">
+                    <h2 class="section-title">📋 Tableau d'Amortissement</h2>
+                    <div class="table-container">
+                        <table class="amortization-table" id="amortizationTable">
+                            <thead>
+                                <tr>
+                                    <th>Mois</th>
+                                    <th>Mensualité</th>
+                                    <th>Capital</th>
+                                    <th>Intérêts</th>
+                                    <th>Capital Restant</th>
+                                </tr>
+                            </thead>
+                            <tbody id="amortizationBody">
+                                <!-- Les données seront générées par JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section Comparaison -->
+            <section id="comparaison" class="section">
+                <div class="header-section">
+                    <h1>Comparaison des Offres Bancaires</h1>
+                    <p>Analysez les différentes propositions des banques sénégalaises</p>
+                </div>
+
+                <div class="comparison-grid" id="comparisonGrid">
+                    <!-- Les cartes de comparaison seront générées par JavaScript -->
+                </div>
+            </section>
+
+            <!-- Section Historique -->
+            <section id="historique" class="section">
+                <div class="header-section">
+                    <h1>Historique des Simulations</h1>
+                    <p>Retrouvez vos précédentes simulations</p>
+                </div>
+
+                <div class="history-list" id="historyList">
+                    <!-- L'historique sera généré par JavaScript -->
+                </div>
+            </section>
+
+            <!-- Section Contact -->
+            <section id="contact" class="section">
+                <div class="header-section">
+                    <h1>Contactez les Banques</h1>
+                    <p>Prenez rendez-vous avec nos partenaires bancaires</p>
+                </div>
+
+                <div class="input-section">
+                    <h2 class="section-title">📞 Demande de Contact</h2>
+                    <div class="contact-form">
+                        <div class="input-row">
+                            <div class="form-group">
+                                <label class="input-label">Nom complet</label>
+                                <input type="text" class="input-field" id="contactName" placeholder="Votre nom">
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label">Téléphone</label>
+                                <input type="tel" class="input-field" id="contactPhone" placeholder="77 123 45 67">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="input-label">Email</label>
+                            <input type="email" class="input-field" id="contactEmail" placeholder="votre@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="input-label">Banque souhaitée</label>
+                            <select class="input-field" id="contactBank">
+                                <option value="boa">Bank of Africa</option>
+                                <option value="bisco">Banque Islamique</option>
+                                <option value="sgbs">Société Générale</option>
+                                <option value="ecobank">Ecobank</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="input-label">Message</label>
+                            <textarea class="input-field" id="contactMessage" rows="4" placeholder="Décrivez votre projet..."></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="sendContactRequest()">
+                            <span>📨</span> Envoyer la demande
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Simulation calculée avec succès!
+    </div>
+
+    <script>
+        // Données des banques
+        const banksData = {
+            'boa': { 
+                name: 'Bank of Africa', 
+                taux: 6.5,
+                contact: "33 839 05 05",
+                avantages: ["Taux compétitifs", "Réseau étendu", "Service diaspora"]
+            },
+            'bisco': { 
+                name: 'Banque Islamique', 
+                taux: 5.8,
+                contact: "33 849 54 54",
+                avantages: ["Financement Charia", "Pas d'intérêt classique", "Éthique"]
+            },
+            'sgbs': { 
+                name: 'Société Générale', 
+                taux: 7.2,
+                contact: "33 839 39 39",
+                avantages: ["Réseau international", "Solutions entreprises", "Expertise immobilière"]
+            },
+            'ecobank': { 
+                name: 'Ecobank', 
+                taux: 6.9,
+                contact: "33 869 69 69",
+                avantages: ["Réseau panafricain", "Services diversifiés", "Innovation digitale"]
+            }
+        };
+
+        let loanChart = null;
+        let currentDurationUnit = 'years';
+        let simulationHistory = JSON.parse(localStorage.getItem('simulationHistory')) || [];
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            setupNavigation();
+            setupMobileMenu();
+            calculateSimulation();
+            loadComparison();
+            loadHistory();
+        });
+
+        // Gestion du menu mobile
+        function setupMobileMenu() {
+            const hamburger = document.getElementById('hamburger');
+            const navMenu = document.getElementById('navMenu');
+            
+            hamburger.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            });
+
+            // Fermer le menu quand on clique sur un lien
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('active');
+                    hamburger.classList.remove('active');
+                });
+            });
+        }
+
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.section');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    
+                    // Mettre à jour la navigation active
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Afficher la section cible
+                    sections.forEach(section => section.classList.remove('active'));
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+        }
+
+        function initializeEventListeners() {
+            // Événements pour les inputs numériques
+            document.getElementById('loanAmount').addEventListener('input', syncLoanAmount);
+            document.getElementById('loanAmountSlider').addEventListener('input', syncLoanAmountSlider);
+            
+            document.getElementById('loanTerm').addEventListener('input', syncLoanTerm);
+            document.getElementById('loanTermSlider').addEventListener('input', syncLoanTermSlider);
+            
+            document.getElementById('interestRate').addEventListener('input', syncInterestRate);
+            document.getElementById('interestRateSlider').addEventListener('input', syncInterestRateSlider);
+
+            // Sélection de la durée
+            document.querySelectorAll('.duration-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.duration-option').forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    currentDurationUnit = this.dataset.unit;
+                    updateDurationControls();
+                    calculateSimulation();
+                });
+            });
+
+            // Sélection de banque
+            document.querySelectorAll('.bank-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.bank-option').forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    updateBankRate();
+                    calculateSimulation();
+                });
+            });
+
+            // Boutons d'action
+            document.getElementById('calculateBtn').addEventListener('click', calculateSimulation);
+            document.getElementById('resetBtn').addEventListener('click', resetForm);
+            document.getElementById('exportBtn').addEventListener('click', exportReport);
+            document.getElementById('detailBtn').addEventListener('click', showDetails);
+
+            // Assistant IA
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+        }
+
+        function updateDurationControls() {
+            const termInput = document.getElementById('loanTerm');
+            const termSlider = document.getElementById('loanTermSlider');
+            const termDisplay = document.getElementById('loanTermDisplay');
+            
+            if (currentDurationUnit === 'months') {
+                termInput.min = 1;
+                termInput.max = 360;
+                termSlider.min = 1;
+                termSlider.max = 360;
+                termInput.value = 120; // 10 ans en mois
+                termSlider.value = 120;
+                termDisplay.textContent = '120 mois';
+            } else {
+                termInput.min = 1;
+                termInput.max = 30;
+                termSlider.min = 1;
+                termSlider.max = 30;
+                termInput.value = 10;
+                termSlider.value = 10;
+                termDisplay.textContent = '10 ans';
+            }
+        }
+
+        function syncLoanAmount() {
+            const value = document.getElementById('loanAmount').value;
+            document.getElementById('loanAmountSlider').value = value;
+            document.getElementById('loanAmountDisplay').textContent = formatCurrency(value);
+            calculateSimulation();
+        }
+
+        function syncLoanAmountSlider() {
+            const value = document.getElementById('loanAmountSlider').value;
+            document.getElementById('loanAmount').value = value;
+            document.getElementById('loanAmountDisplay').textContent = formatCurrency(value);
+            calculateSimulation();
+        }
+
+        function syncLoanTerm() {
+            const value = document.getElementById('loanTerm').value;
+            document.getElementById('loanTermSlider').value = value;
+            document.getElementById('loanTermDisplay').textContent = 
+                currentDurationUnit === 'months' ? value + ' mois' : value + ' ans';
+            calculateSimulation();
+        }
+
+        function syncLoanTermSlider() {
+            const value = document.getElementById('loanTermSlider').value;
+            document.getElementById('loanTerm').value = value;
+            document.getElementById('loanTermDisplay').textContent = 
+                currentDurationUnit === 'months' ? value + ' mois' : value + ' ans';
+            calculateSimulation();
+        }
+
+        function syncInterestRate() {
+            const value = document.getElementById('interestRate').value;
+            document.getElementById('interestRateSlider').value = value;
+            document.getElementById('interestRateDisplay').textContent = value + '%';
+            calculateSimulation();
+        }
+
+        function syncInterestRateSlider() {
+            const value = document.getElementById('interestRateSlider').value;
+            document.getElementById('interestRate').value = value;
+            document.getElementById('interestRateDisplay').textContent = value + '%';
+            calculateSimulation();
+        }
+
+        function updateBankRate() {
+            const activeBank = document.querySelector('.bank-option.active').dataset.bank;
+            const bankRate = banksData[activeBank].taux;
+            document.getElementById('interestRate').value = bankRate;
+            document.getElementById('interestRateSlider').value = bankRate;
+            document.getElementById('interestRateDisplay').textContent = bankRate + '%';
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+        }
+
+        function calculateSimulation() {
+            // Récupération des valeurs
+            const loanAmount = parseInt(document.getElementById('loanAmount').value);
+            let loanTerm = parseInt(document.getElementById('loanTerm').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
+            const downPayment = parseInt(document.getElementById('downPayment').value);
+            const monthlyIncome = parseInt(document.getElementById('monthlyIncome').value);
+            const bank = document.querySelector('.bank-option.active').dataset.bank;
+
+            // Conversion en mois si nécessaire
+            if (currentDurationUnit === 'years') {
+                loanTerm = loanTerm * 12;
+            }
+
+            // Calculs
+            const principal = loanAmount - downPayment;
+            const monthlyRate = interestRate / 12;
+            const numberOfPayments = loanTerm;
+
+            // Calcul de la mensualité
+            const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+                                 (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+
+            // Calcul du coût total
+            const totalCost = (monthlyPayment * numberOfPayments) - principal;
+            const totalAmount = principal + totalCost;
+
+            // Taux d'endettement
+            const debtRatio = (monthlyPayment / monthlyIncome) * 100;
+
+            // Mise à jour de l'interface
+            document.getElementById('monthlyPayment').textContent = formatCurrency(Math.round(monthlyPayment));
+            document.getElementById('totalCost').textContent = formatCurrency(Math.round(totalCost));
+            document.getElementById('debtRatio').textContent = debtRatio.toFixed(1) + '%';
+            document.getElementById('amortizationPeriod').textContent = 
+                currentDurationUnit === 'months' ? loanTerm + ' mois' : (loanTerm / 12) + ' ans';
+
+            // Mise à jour du graphique
+            updateChart(principal, totalCost, downPayment);
+            
+            // Mise à jour du tableau d'amortissement
+            updateAmortizationTable(principal, monthlyPayment, monthlyRate, numberOfPayments);
+            
+            // Sauvegarde dans l'historique
+            saveToHistory({
+                loanAmount,
+                loanTerm: currentDurationUnit === 'months' ? loanTerm : loanTerm * 12,
+                interestRate: interestRate * 100,
+                monthlyPayment: Math.round(monthlyPayment),
+                bank,
+                date: new Date().toLocaleDateString('fr-FR')
+            });
+
+            showNotification('Simulation mise à jour!');
+        }
+
+        function updateChart(principal, interest, downPayment) {
+            const ctx = document.getElementById('loanChart').getContext('2d');
+            
+            if (loanChart) {
+                loanChart.destroy();
+            }
+
+            loanChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Capital emprunté', 'Intérêts', 'Apport personnel'],
+                    datasets: [{
+                        data: [principal, interest, downPayment],
+                        backgroundColor: [
+                            '#008E49',
+                            '#FDEF42',
+                            '#E10019'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#0A1F1C'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#F0F7F5',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAmortizationTable(principal, monthlyPayment, monthlyRate, numberOfPayments) {
+            const tableBody = document.getElementById('amortizationBody');
+            tableBody.innerHTML = '';
+            
+            let remainingPrincipal = principal;
+            
+            for (let i = 1; i <= Math.min(12, numberOfPayments); i++) {
+                const interestPayment = remainingPrincipal * monthlyRate;
+                const principalPayment = monthlyPayment - interestPayment;
+                remainingPrincipal -= principalPayment;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${i}</td>
+                    <td>${formatCurrency(Math.round(monthlyPayment))}</td>
+                    <td>${formatCurrency(Math.round(principalPayment))}</td>
+                    <td>${formatCurrency(Math.round(interestPayment))}</td>
+                    <td>${formatCurrency(Math.round(remainingPrincipal))}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+
+        function saveToHistory(simulation) {
+            simulationHistory.unshift(simulation);
+            if (simulationHistory.length > 10) {
+                simulationHistory = simulationHistory.slice(0, 10);
+            }
+            localStorage.setItem('simulationHistory', JSON.stringify(simulationHistory));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            if (simulationHistory.length === 0) {
+                historyList.innerHTML = '<p style="text-align: center; opacity: 0.7;">Aucune simulation sauvegardée</p>';
+                return;
+            }
+            
+            simulationHistory.forEach(sim => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${banksData[sim.bank].name}</strong><br>
+                        <small>${sim.date} - ${formatCurrency(sim.loanAmount)}</small>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong>${formatCurrency(sim.monthlyPayment)}/mois</strong><br>
+                        <small>${sim.interestRate}% - ${sim.loanTerm} mois</small>
+                    </div>
+                `;
+                historyList.appendChild(item);
+            });
+        }
+
+        function loadComparison() {
+            const comparisonGrid = document.getElementById('comparisonGrid');
+            comparisonGrid.innerHTML = '';
+            
+            Object.keys(banksData).forEach(bankKey => {
+                const bank = banksData[bankKey];
+                const card = document.createElement('div');
+                card.className = 'comparison-card';
+                card.innerHTML = `
+                    <h3 style="color: var(--primary); margin-bottom: 10px;">${bank.name}</h3>
+                    <div style="font-size: 2rem; color: var(--secondary); margin: 10px 0;">${bank.taux}%</div>
+                    <div style="margin: 15px 0;">
+                        ${bank.avantages.map(avantage => `<div style="margin: 8px 0;">✓ ${avantage}</div>`).join('')}
+                    </div>
+                    <div style="color: var(--primary); font-weight: bold; margin: 15px 0;">Contact: ${bank.contact}</div>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="selectBank('${bankKey}')">
+                        Choisir cette banque
+                    </button>
+                `;
+                comparisonGrid.appendChild(card);
+            });
+        }
+
+        function selectBank(bankKey) {
+            document.querySelectorAll('.bank-option').forEach(opt => opt.classList.remove('active'));
+            document.querySelector(`.bank-option[data-bank="${bankKey}"]`).classList.add('active');
+            updateBankRate();
+            calculateSimulation();
+            
+            // Retour à la section simulation
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector('.nav-link[href="#simulation"]').classList.add('active');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('simulation').classList.add('active');
+        }
+
+        function resetForm() {
+            document.getElementById('loanAmount').value = 5000000;
+            document.getElementById('loanTerm').value = 10;
+            document.getElementById('interestRate').value = 6.5;
+            document.getElementById('downPayment').value = 1000000;
+            document.getElementById('monthlyIncome').value = 500000;
+            currentDurationUnit = 'years';
+            updateDurationControls();
+            
+            syncLoanAmount();
+            syncLoanTerm();
+            syncInterestRate();
+            
+            showNotification('Formulaire réinitialisé!');
+        }
+
+        function exportReport() {
+            showNotification('Rapport exporté en PDF!');
+        }
+
+        function showDetails() {
+            showNotification('Affichage des détails complets...');
+        }
+
+        function sendContactRequest() {
+            const name = document.getElementById('contactName').value;
+            const phone = document.getElementById('contactPhone').value;
+            const email = document.getElementById('contactEmail').value;
+            const bank = document.getElementById('contactBank').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            if (name && phone) {
+                showNotification(`Demande envoyée à ${banksData[bank].name}!`);
+                // Réinitialiser le formulaire
+                document.getElementById('contactName').value = '';
+                document.getElementById('contactPhone').value = '';
+                document.getElementById('contactEmail').value = '';
+                document.getElementById('contactMessage').value = '';
+            } else {
+                showNotification('Veuillez remplir tous les champs obligatoires');
+            }
+        }
+
+        // Assistant IA
+        function toggleAssistant() {
+            document.getElementById('assistantChat').classList.toggle('active');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage(message, 'user');
+                input.value = '';
+                
+                // Réponse IA simulée
+                setTimeout(() => {
+                    const response = generateAIResponse(message);
+                    addMessage(response, 'bot');
+                }, 1000);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('taux') || lowerMessage.includes('intérêt')) {
+                return "Les taux actuels au Sénégal varient entre 5% et 8% selon les banques et le type de prêt. La Banque Islamique propose souvent les taux les plus bas.";
+            } else if (lowerMessage.includes('durée') || lowerMessage.includes('année') || lowerMessage.includes('mois')) {
+                return "Vous pouvez choisir entre l'affichage en années (1-30 ans) ou en mois (1-360 mois). Les prêts immobiliers vont jusqu'à 25 ans, les prêts personnels jusqu'à 7 ans.";
+            } else if (lowerMessage.includes('apport') || lowerMessage.includes('personnel')) {
+                return "Un apport personnel de 10-20% est généralement requis. Plus votre apport est important, meilleurs seront vos conditions de prêt.";
+            } else if (lowerMessage.includes('endettement') || lowerMessage.includes('revenu')) {
+                return "Le taux d'endettement recommandé est de 33% maximum. Au-delà de 35%, votre dossier peut être refusé.";
+            } else if (lowerMessage.includes('banque') || lowerMessage.includes('quelle banque')) {
+                return "Je vous recommande de comparer les offres. La Banque Islamique pour les taux bas, la Bank of Africa pour la diaspora, la Société Générale pour l'immobilier.";
+            } else {
+                return "Je peux vous aider avec les taux d'intérêt, la durée, l'apport personnel, le taux d'endettement, ou le choix de banque. Quelle est votre question précise?";
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>+
+</html>
